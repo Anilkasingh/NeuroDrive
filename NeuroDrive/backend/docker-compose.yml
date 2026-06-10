@@ -1,0 +1,54 @@
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    container_name: eeg_timescaledb
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: eeg
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      TIMESCALEDB_TELEMETRY: off
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+     # - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - eeg_network
+
+  # backend:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: eeg_backend
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     - DATABASE_URL=postgres://eeg_user:eeg_password@timescaledb:5432/eeg_db?sslmode=disable
+  #   depends_on:
+  #     - timescaledb
+  #   networks:
+  #     - eeg_network
+
+  rabbitmq:
+      image: rabbitmq:3-management
+      container_name: eeg_rabbitmq
+      restart: unless-stopped
+      ports:
+        - "5672:5672"
+        - "15672:15672"
+        - "1883:1883"
+      environment:
+        RABBITMQ_DEFAULT_USER: guest
+        RABBITMQ_DEFAULT_PASS: guest
+      networks:
+        - eeg_network
+
+
+volumes:
+  timescaledb_data:
+
+networks:
+  eeg_network:
+    driver: bridge
